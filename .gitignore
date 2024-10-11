@@ -1,0 +1,18 @@
+# Unity-related directories to ignore
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# Package management
+/Packages/manifest.json
+/Packages/package-lock.json
+
+# Crash reports
+sysinfo.txt
+
+# Ignore large video file
+Assets/Videos/12497058_3840_2160_60fps.mp4
