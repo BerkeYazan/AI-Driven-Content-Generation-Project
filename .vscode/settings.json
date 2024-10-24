@@ -51,5 +51,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "AI-Driven CG, Painting Museum.sln"
+    "dotnet.defaultSolution": "AI-Driven-Content-Generation-Project-master.sln"
 }

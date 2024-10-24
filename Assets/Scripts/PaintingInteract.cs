@@ -1,10 +1,8 @@
-// PaintingInteract.cs
-
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class PaintingInteract : MonoBehaviour
 {
+    [Tooltip("Name of the video scene to load when interacting with this painting.")]
     public string videoSceneName;
 
     private bool isPlayerNear = false;
@@ -13,8 +11,14 @@ public class PaintingInteract : MonoBehaviour
     {
         if (isPlayerNear && Input.GetKeyDown(KeyCode.Return))
         {
-            // Load the video scene with transition
-            FindObjectOfType<SceneTransitionManager>().TransitionToScene(videoSceneName);
+            if (SceneTransitionManager.instance != null)
+            {
+                SceneTransitionManager.instance.TransitionToScene(videoSceneName, true); 
+            }
+            else
+            {
+                Debug.LogError("SceneTransitionManager.instance not found in the scene.");
+            }
         }
     }
 

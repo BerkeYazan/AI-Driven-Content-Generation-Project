@@ -60,7 +60,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (controller.isGrounded && velocity.y < 0)
         {
-            velocity.y = -2f; // Small downward force to keep grounded
+            velocity.y = -2f;
         }
 
         if (Input.GetKeyDown(KeyCode.Space) && controller.isGrounded)
@@ -103,7 +103,7 @@ public class PlayerMovement : MonoBehaviour
         float currentHeight = controller.height;
         Vector3 currentCenter = controller.center;
         float elapsed = 0f;
-        float duration = 0.2f; // Adjust duration as needed
+        float duration = 0.2f; 
 
         while (elapsed < duration)
         {

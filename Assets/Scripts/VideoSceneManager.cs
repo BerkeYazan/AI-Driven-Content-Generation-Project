@@ -1,45 +1,60 @@
-// VideoSceneManager.cs
-
 using UnityEngine;
 using UnityEngine.Video;
 using UnityEngine.SceneManagement;
-using System.Collections.Generic;
 
 public class VideoSceneManager : MonoBehaviour
 {
     public VideoPlayer videoPlayer;
-    public string mainSceneName = "MainScene";
-
-    public SubtitleManager subtitleManager;
-    public List<SubtitleEntry> subtitles;
-
+    public string mainSceneName = "MainScene"; 
     public string narrationSoundName;
 
     void Start()
     {
-        if (videoPlayer == null)
+        Debug.Log("VideoSceneManager Start called.");
+
+        if (AudioManager.instance != null)
         {
-            videoPlayer = GetComponent<VideoPlayer>();
+            Debug.Log("Playing narration and dimming background music in VideoScene.");
+            AudioManager.instance.DimBackgroundMusic(0.05f);  // Dim the background music to 5%
+            if (!string.IsNullOrEmpty(narrationSoundName) && narrationSoundName != "MuseumAmbiance")
+            {
+                AudioManager.instance.PlayNarration(narrationSoundName);  // Play the specific narration for this painting
+            }
+            else
+            {
+                Debug.LogWarning("narrationSoundName is either not set or set to 'MuseumAmbiance', which should not be used as narration.");
+            }
+        }
+        else
+        {
+            Debug.LogError("AudioManager.instance not found in the scene.");
         }
 
-        videoPlayer.loopPointReached += OnVideoEnd;
-
-        // Play narration audio
-        FindObjectOfType<AudioManager>().Play(narrationSoundName);
-
-        // Start subtitles
-        subtitleManager.StartSubtitles(subtitles);
+        if (videoPlayer != null)
+        {
+            videoPlayer.loopPointReached += OnVideoEnd;
+            videoPlayer.Play();  // Start playing the video
+        }
+        else
+        {
+            Debug.LogError("VideoPlayer not found in the scene.");
+        }
     }
-
-    void Update()
-    {
-        // Sync subtitles with video playback time
-        float videoTime = (float)videoPlayer.time;
-        subtitleManager.UpdateSubtitles(videoTime);
-    }
-
+    
     void OnVideoEnd(VideoPlayer vp)
     {
-        SceneManager.LoadScene(mainSceneName);
+        Debug.Log("Video has ended. Returning to Main Scene.");
+
+        // Use SceneTransitionManager to transition back
+        if (SceneTransitionManager.instance != null)
+        {
+            SceneTransitionManager.instance.TransitionToScene(mainSceneName, false);
+        }
+        else
+        {
+            Debug.LogError("SceneTransitionManager.instance not found in the scene.");
+
+            SceneManager.LoadScene(mainSceneName);
+        }
     }
 }

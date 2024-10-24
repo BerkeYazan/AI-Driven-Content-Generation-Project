@@ -1,74 +1,125 @@
-// SceneTransitionManager.cs
-
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.SceneManagement;
 
+[RequireComponent(typeof(CanvasGroup))]
 public class SceneTransitionManager : MonoBehaviour
 {
-    public Image fadeImage;
-    public float fadeDuration = 1f;
+    public static SceneTransitionManager instance;
+
+    [Header("Transition Settings")]
+    [Tooltip("CanvasGroup used for fade transitions.")]
+    public CanvasGroup fadeCanvasGroup;
+
+    [Tooltip("Duration of the fade when entering a painting scene (in seconds).")]
+    public float fadeOutDuration = 1f;  // Quicker fade-out
+
+    [Tooltip("Duration of the fade when exiting a painting scene (in seconds).")]
+    public float fadeInDuration = 3f;   // Slower fade-in
+
+    [Tooltip("Target volume for background music when dimmed.")]
+    [Range(0f, 1f)]
+    public float dimmedVolume = 0.1f;   // Dim to 10%
+
+    [Tooltip("Target volume for background music when restored.")]
+    [Range(0f, 1f)]
+    public float restoredVolume = 1.0f; // Restore to 100%
+
+    void Awake()
+    {
+        // Implement Singleton pattern
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+    }
 
     void Start()
     {
-        StartCoroutine(FadeIn());
+        Debug.Log("SceneTransitionManager Start called.");
+        StartCoroutine(FadeIn());  // Fade into the scene
     }
 
-    public void TransitionToScene(string sceneName)
+    public void TransitionToScene(string sceneName, bool isPainting)
     {
-        StartCoroutine(FadeOut(sceneName));
+        Debug.Log($"Transitioning to scene: {sceneName} | isPainting: {isPainting}");
+        StartCoroutine(FadeOut(sceneName, isPainting));
     }
 
     IEnumerator FadeIn()
     {
-        fadeImage.gameObject.SetActive(true);
-        Color color = fadeImage.color;
-        for (float t = fadeDuration; t >= 0; t -= Time.deltaTime)
+        if (fadeCanvasGroup == null)
         {
-            color.a = t / fadeDuration;
-            fadeImage.color = color;
+            Debug.LogError("FadeCanvasGroup is not assigned in the SceneTransitionManager.");
+            yield break;
+        }
+
+        fadeCanvasGroup.gameObject.SetActive(true);
+        fadeCanvasGroup.alpha = 1f;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < fadeOutDuration)  // Using fadeOutDuration for FadeIn to maintain consistency
+        {
+            fadeCanvasGroup.alpha = 1f - (elapsedTime / fadeOutDuration);
+            elapsedTime += Time.deltaTime;
             yield return null;
         }
-        fadeImage.gameObject.SetActive(false);
+
+        fadeCanvasGroup.alpha = 0f;
+        fadeCanvasGroup.gameObject.SetActive(false);
     }
 
-    IEnumerator FadeOut(string sceneName)
+    IEnumerator FadeOut(string sceneName, bool isPainting)
     {
-        // Fade out audio
-        StartCoroutine(FadeOutAudio());
-
-        // Fade out screen
-        fadeImage.gameObject.SetActive(true);
-        Color color = fadeImage.color;
-        for (float t = 0; t <= fadeDuration; t += Time.deltaTime)
+        if (fadeCanvasGroup == null)
         {
-            color.a = t / fadeDuration;
-            fadeImage.color = color;
+            Debug.LogError("FadeCanvasGroup is not assigned in the SceneTransitionManager.");
+            yield break;
+        }
+
+        // Determine fade duration based on transition type
+        float currentFadeDuration = isPainting ? fadeOutDuration : fadeInDuration;
+
+        fadeCanvasGroup.gameObject.SetActive(true);
+        fadeCanvasGroup.alpha = 0f;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < currentFadeDuration)
+        {
+            fadeCanvasGroup.alpha = elapsedTime / currentFadeDuration;
+            elapsedTime += Time.deltaTime;
             yield return null;
         }
-        SceneManager.LoadScene(sceneName);
-    }
 
-    IEnumerator FadeOutAudio()
-    {
-        AudioManager audioManager = FindObjectOfType<AudioManager>();
-        if (audioManager != null)
+        fadeCanvasGroup.alpha = 1f;
+
+        // Adjust background music volume after fade out
+        if (AudioManager.instance != null)
         {
-            AudioSource bgMusic = audioManager.GetAudioSource("Collaborative Ambitions");
-            if (bgMusic != null)
+            if (isPainting)
             {
-                float startVolume = bgMusic.volume;
-
-                while (bgMusic.volume > 0)
-                {
-                    bgMusic.volume -= startVolume * Time.deltaTime / fadeDuration;
-                    yield return null;
-                }
-
-                bgMusic.Stop();
-                bgMusic.volume = startVolume;
+                Debug.Log("Dimming background music for painting scene.");
+                AudioManager.instance.DimBackgroundMusic(dimmedVolume);  // Dim to 10%
+            }
+            else
+            {
+                Debug.Log("Restoring background music for museum.");
+                AudioManager.instance.RestoreBackgroundMusic(restoredVolume);  // Restore to 100%
             }
         }
+        else
+        {
+            Debug.LogWarning("AudioManager.instance not found. Skipping background music adjustment.");
+        }
+
+        // Load the new scene
+        SceneManager.LoadScene(sceneName);
     }
 }

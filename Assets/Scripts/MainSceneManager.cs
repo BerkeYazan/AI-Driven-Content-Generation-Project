@@ -1,33 +1,37 @@
-// MainSceneManager.cs
-
 using UnityEngine;
 using System.Collections.Generic;
 
 public class MainSceneManager : MonoBehaviour
 {
+    [Header("Subtitle Settings")]
+    [Tooltip("Reference to the SubtitleManager component.")]
     public SubtitleManager subtitleManager;
+
+    [Tooltip("List of subtitles to display in the main scene.")]
     public List<SubtitleEntry> subtitles;
-
-    public string narrationSoundName;
-
-    private AudioSource narrationAudioSource;
 
     void Start()
     {
-        // Play narration audio
-        AudioManager audioManager = FindObjectOfType<AudioManager>();
-        audioManager.Play(narrationSoundName);
-        narrationAudioSource = audioManager.GetAudioSource(narrationSoundName);
+        // Initialize subtitles if applicable
+        if (subtitleManager != null && subtitles != null && subtitles.Count > 0)
+        {
+            subtitleManager.StartSubtitles(subtitles);
+            Debug.Log("MainSceneManager: Subtitles started.");
+        }
+        else
+        {
+            Debug.LogWarning("MainSceneManager: SubtitleManager is not assigned or subtitles list is empty.");
+        }
 
-        // Start subtitles
-        subtitleManager.StartSubtitles(subtitles);
+        // Since there is no narration in the museum stuff, no audio playback is required here
     }
 
     void Update()
     {
-        if (narrationAudioSource != null && narrationAudioSource.isPlaying)
+        // Update subtitles based on the current time
+        if (subtitleManager != null)
         {
-            float currentTime = narrationAudioSource.time;
+            float currentTime = Time.time;
             subtitleManager.UpdateSubtitles(currentTime);
         }
     }
